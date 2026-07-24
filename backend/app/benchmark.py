@@ -20,7 +20,7 @@ from app.errors import ValidationError
 
 DEFAULT_WORKERS = 4
 DEFAULT_N = 200000
-WORKERS_RANGE = (1, 8)
+WORKERS_RANGE = (1, 32)
 N_RANGE = (10000, 5000000)
 
 

@@ -73,7 +73,7 @@ function setBenchState(state, payload) {
   benchMeta.hidden = true;
   benchEmpty.hidden = false;
   benchEmpty.textContent = running
-    ? 'Running benchmark… (may take a few seconds)'
+    ? 'Running benchmark… (may take a while at high workers/n)'
     : payload?.status === 404
       ? 'The /api/benchmark endpoint is not available on the backend yet.'
       : `Could not run the benchmark: ${payload?.message ?? 'error'}`;

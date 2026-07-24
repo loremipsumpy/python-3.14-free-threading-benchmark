@@ -66,10 +66,14 @@ class ParseParamsTests(unittest.TestCase):
     def test_valid_values(self):
         self.assertEqual(parse_params("6", "10000"), (6, 10000))
 
+    def test_workers_boundary_32_ok(self):
+        self.assertEqual(parse_params("32", None), (32, 200000))
+
     def test_workers_out_of_range_high(self):
         with self.assertRaises(ValidationError) as ctx:
-            parse_params("9", None)
+            parse_params("33", None)
         self.assertIn("workers", ctx.exception.details)
+        self.assertIn("[1, 32]", ctx.exception.details["workers"])
 
     def test_workers_out_of_range_low(self):
         with self.assertRaises(ValidationError):
