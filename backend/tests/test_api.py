@@ -53,7 +53,8 @@ class ApiTestCase(unittest.TestCase):
         finally:
             conn.close()
 
-    def json_body(self, raw):
+    @staticmethod
+    def json_body(raw):
         return json.loads(raw) if raw else None
 
 
