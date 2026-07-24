@@ -14,6 +14,27 @@ The vehicle is an educational POC: a complete CRUD API written **only with the P
 
 With the GIL, threads are serialized (even slightly slower than sequential due to contention) while subinterpreters scale with cores thanks to the per-interpreter GIL. Without the GIL, threads finally parallelize, and even edge out subinterpreters since they skip the cross-interpreter marshalling. Same checksum in every mode and build.
 
+## Scaling from 1 to 32 workers
+
+![Time to run W copies of the same CPU-bound task](benchmark.svg)
+
+Measured on a Ryzen 9 5950X (16 cores / 32 threads), n=200000, both builds sweeping
+workers 1 to 32. Each mode runs the same task W times: sequential is the linear
+reference and GIL threads track it slightly worse (lock contention), while
+subinterpreters and free-threaded threads stay flat: W copies finish in roughly the
+time of one until the physical cores run out.
+
+Reproduce it (the chart generator is stdlib-only too):
+
+```bash
+cd backend
+# with the standard stack on :8000
+python3 scripts/sweep.py collect --n 200000 --out gil.json
+# swap to the free-threaded stack, then
+python3 scripts/sweep.py collect --n 200000 --out ft.json
+python3 scripts/sweep.py render --gil gil.json --ft ft.json --out ../benchmark.svg
+```
+
 ## Run
 
 ```bash
