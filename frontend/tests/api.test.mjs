@@ -12,6 +12,7 @@ import {
   createApi,
   omitEmpty,
   buildQuery,
+  benchmarkParams,
   ApiError,
   NetworkError,
 } from '../public/js/api.js';
@@ -74,6 +75,20 @@ test('buildQuery builds the query string and skips empties', () => {
   assert.equal(buildQuery({ workers: 4, n: 200000 }), '?workers=4&n=200000');
   assert.equal(buildQuery({ status: '', x: null, y: undefined }), '');
   assert.equal(buildQuery({}), '');
+});
+
+test('benchmarkParams: cpu/default keeps n & drops delay_ms; io keeps delay_ms & drops n', () => {
+  // compat: no task ⇒ cpu semantics (n applies, delay_ms does not)
+  assert.deepEqual(benchmarkParams({ workers: 4, n: 200000 }), { workers: 4, n: 200000 });
+  assert.deepEqual(
+    benchmarkParams({ task: 'cpu', workers: 4, n: 200000, delay_ms: 50 }),
+    { task: 'cpu', workers: 4, n: 200000 },
+  );
+  assert.deepEqual(
+    benchmarkParams({ task: 'io', workers: 4, n: 200000, delay_ms: 50 }),
+    { task: 'io', workers: 4, delay_ms: 50 },
+  );
+  assert.deepEqual(benchmarkParams(), {});
 });
 
 // ── Happy paths ───────────────────────────────────────────────────────────────
@@ -155,6 +170,15 @@ test('runBenchmark(): with params builds a query; without params sends no query'
   assert.equal(fetch.calls[0].url, 'http://localhost:8000/api/benchmark?workers=4&n=200000');
   await api.runBenchmark();
   assert.equal(fetch.calls[1].url, 'http://localhost:8000/api/benchmark');
+});
+
+test('runBenchmark(): io sends task+delay_ms (no n); cpu sends task+n (no delay_ms)', async () => {
+  const fetch = fakeFetch(() => json({ task: 'io', gil_enabled: true, workers: 4, delay_ms: 50, checksum: 0, results_ms: {} }));
+  const { api } = withLogs({ fetch });
+  await api.runBenchmark({ task: 'io', workers: 4, delay_ms: 50, n: 200000 });
+  assert.equal(fetch.calls[0].url, 'http://localhost:8000/api/benchmark?task=io&workers=4&delay_ms=50');
+  await api.runBenchmark({ task: 'cpu', workers: 8, n: 100000, delay_ms: 50 });
+  assert.equal(fetch.calls[1].url, 'http://localhost:8000/api/benchmark?task=cpu&workers=8&n=100000');
 });
 
 // ── Duration measurement ──────────────────────────────────────────────────────

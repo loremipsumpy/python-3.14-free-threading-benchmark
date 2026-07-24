@@ -50,8 +50,9 @@ class _Handler(BaseHTTPRequestHandler):
             parts = urlsplit(self.path)
             query = parse_qs(parts.query)
             body = self._read_json_body()
+            base_url = f"http://127.0.0.1:{self.server.server_address[1]}"
             status, payload = dispatch(
-                str(method), parts.path, query, body, self.server.repo
+                str(method), parts.path, query, body, self.server.repo, base_url
             )
             self._respond(status, payload, preflight=is_preflight)
         except ApiError as err:
@@ -112,6 +113,10 @@ class _Handler(BaseHTTPRequestHandler):
 class _Server(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+    # socketserver's default listen backlog is 5; the io benchmark opens up to 32
+    # concurrent /api/slow connections (one per worker) plus margin, so a small backlog
+    # overflows and TCP retransmits spike latency (~82ms to ~1000ms).
+    request_queue_size = 128
 
     def __init__(self, server_address, handler_class, *, cors_origin: str, repo: TaskRepository) -> None:
         super().__init__(server_address, handler_class)

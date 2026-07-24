@@ -142,5 +142,31 @@ class TaskCrudRouteTests(RouterTestCase):
             self.go("DELETE", "/api/tasks/nope")
 
 
+class SlowRouteTests(RouterTestCase):
+    def test_get_slow_sleeps_and_acks(self):
+        status, payload = self.go("GET", "/api/slow", query={"ms": ["1"]})
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(payload, {"ok": True, "ms": 1})
+
+    def test_post_slow_ok(self):
+        status, payload = self.go("POST", "/api/slow", query={"ms": ["1"]})
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertTrue(payload["ok"])
+
+    def test_slow_default_ms(self):
+        _, payload = self.go("GET", "/api/slow")
+        self.assertEqual(payload["ms"], 50)
+
+    def test_slow_invalid_ms_422(self):
+        with self.assertRaises(ValidationError) as ctx:
+            self.go("GET", "/api/slow", query={"ms": ["2000"]})
+        self.assertIn("ms", ctx.exception.details)
+
+    def test_slow_wrong_method_405(self):
+        with self.assertRaises(MethodNotAllowedError) as ctx:
+            self.go("DELETE", "/api/slow")
+        self.assertEqual(ctx.exception.allowed, ["GET", "POST", "OPTIONS"])
+
+
 if __name__ == "__main__":
     unittest.main()

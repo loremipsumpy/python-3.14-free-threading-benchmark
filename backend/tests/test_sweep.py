@@ -118,10 +118,33 @@ class SpeedupRenderTests(unittest.TestCase):
 
     def test_speedup_labels(self):
         for text in (
-            "Speedup vs sequential, W copies of the same task (n=200000, higher is better)",
+            "Speedup vs sequential, W copies of the same CPU-bound task (n=200000), higher is better",
             "speedup (x)",
         ):
             self.assertIn(text, self.svg)
+
+
+class IoRenderTests(unittest.TestCase):
+    def _io_run(self, gil):
+        return {
+            "gil_enabled": gil, "task": "io", "delay_ms": 50, "python": "3.14.6",
+            "points": [
+                {"workers": w, "sequential": 400, "threads": 60, "interpreters": 90}
+                for w in range(WORKERS_MIN, WORKERS_MAX + 1)
+            ],
+        }
+
+    def test_title_reflects_io_task(self):
+        svg = render_svg(self._io_run(True), self._io_run(False))
+        self.assertIn("I/O-bound task (HTTP, delay=50ms)", svg)
+
+    def test_speedup_title_reflects_io_task(self):
+        svg = render_svg(self._io_run(True), self._io_run(False), mode="speedup")
+        self.assertIn(
+            "Speedup vs sequential, W copies of the same I/O-bound task (HTTP, delay=50ms), "
+            "higher is better",
+            svg,
+        )
 
 
 if __name__ == "__main__":

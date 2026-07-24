@@ -23,6 +23,7 @@ from xml.sax.saxutils import escape
 WORKERS_MIN = 1
 WORKERS_MAX = 32
 DEFAULT_N = 200000
+DEFAULT_DELAY = 50
 DEFAULT_BASE_URL = "http://localhost:8000"
 # A single w=32/n=200000 benchmark runs the sequential mode ~32x, so a call can take
 # tens of seconds; the read timeout has to be generous or the sweep aborts spuriously.
@@ -49,7 +50,8 @@ def _fetch_with_retry(fetch, url: str, timeout: float, label: str) -> dict:
             raise RuntimeError(f"{label} failed after retry ({url}): {second}") from second
 
 
-def collect(base_url: str, n: int, *, fetch=_http_get_json, progress=sys.stderr) -> dict:
+def collect(base_url: str, *, task: str = "cpu", n: int = DEFAULT_N,
+            delay_ms: int = DEFAULT_DELAY, fetch=_http_get_json, progress=sys.stderr) -> dict:
     """Sweep workers 1..32; return the full run in memory (caller persists it).
 
     `python`/`gil_enabled` come from ``/api/health`` (the benchmark response has no
@@ -59,7 +61,10 @@ def collect(base_url: str, n: int, *, fetch=_http_get_json, progress=sys.stderr)
     health = _fetch_with_retry(fetch, f"{base_url}/api/health", 30, "health")
     points = []
     for workers in range(WORKERS_MIN, WORKERS_MAX + 1):
-        url = f"{base_url}/api/benchmark?workers={workers}&n={n}"
+        if task == "io":
+            url = f"{base_url}/api/benchmark?task=io&workers={workers}&delay_ms={delay_ms}"
+        else:
+            url = f"{base_url}/api/benchmark?workers={workers}&n={n}"
         data = _fetch_with_retry(fetch, url, FETCH_TIMEOUT, f"workers={workers}")
         ms = data["results_ms"]
         points.append(
@@ -76,12 +81,14 @@ def collect(base_url: str, n: int, *, fetch=_http_get_json, progress=sys.stderr)
             f"interpreters={ms['interpreters']:.1f}ms",
             file=progress,
         )
-    return {
+    run = {
         "gil_enabled": health["gil_enabled"],
-        "n": n,
+        "task": task,
         "python": health["python"],
         "points": points,
     }
+    run["delay_ms" if task == "io" else "n"] = delay_ms if task == "io" else n
+    return run
 
 
 # ---------------------------------------------------------------------------
@@ -172,15 +179,21 @@ def _polyline_points(points: list, y_max: float) -> str:
     )
 
 
+def _task_label(run: dict) -> str:
+    if run.get("task") == "io":
+        return f"I/O-bound task (HTTP, delay={run['delay_ms']}ms)"
+    return f"CPU-bound task (n={run['n']})"
+
+
 def render_svg(gil_run: dict, ft_run: dict, mode: str = "time") -> str:
     series = _series(gil_run, ft_run, mode)
     y_max = axis_max(max(value for _, _, points in series for _, value in points))
-    n = gil_run["n"]
+    label = _task_label(gil_run)
     if mode == "speedup":
-        title = f"Speedup vs sequential, W copies of the same task (n={n}, higher is better)"
+        title = f"Speedup vs sequential, W copies of the same {label}, higher is better"
         y_label = "speedup (x)"
     else:
-        title = f"Time to run W copies of the same CPU-bound task (n={n})"
+        title = f"Time to run W copies of the same {label}"
         y_label = "seconds"
 
     parts = [
@@ -259,8 +272,12 @@ def main(argv=None) -> None:
     collect_parser = sub.add_parser(
         "collect", help="sweep workers 1..32 against a running benchmark API"
     )
+    collect_parser.add_argument("--task", choices=("cpu", "io"), default="cpu")
     collect_parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
-    collect_parser.add_argument("--n", type=int, default=DEFAULT_N)
+    collect_parser.add_argument("--n", type=int, default=DEFAULT_N, help="task=cpu only")
+    collect_parser.add_argument(
+        "--delay-ms", type=int, default=DEFAULT_DELAY, help="task=io only"
+    )
     collect_parser.add_argument("--out", help="output JSON path (default: stdout)")
 
     render_parser = sub.add_parser(
@@ -279,7 +296,7 @@ def main(argv=None) -> None:
     args = parser.parse_args(argv)
 
     if args.command == "collect":
-        run = collect(args.base_url, args.n)
+        run = collect(args.base_url, task=args.task, n=args.n, delay_ms=args.delay_ms)
         text = json.dumps(run, indent=2)
         if args.out:
             with open(args.out, "w", encoding="utf-8") as handle:

@@ -1,15 +1,22 @@
-"""CRUD dispatch: `(method, path, query, body, repo)` → `(status, payload)`.
+"""CRUD dispatch: `(method, path, query, body, repo, base_url)` → `(status, payload)`.
 
 Knows nothing about raw HTTP or SQL. Routes with structural `match/case` over
 `(method, segments)`. On success returns `(HTTPStatus, payload)`; on error **raises**
 an `ApiError` (`server.py` is the single point that translates it to an HTTP response).
+`base_url` is the server's own address, needed by the io benchmark to call `/api/slow`.
 """
 
 import platform
 import sys
 from http import HTTPStatus
 
-from app.benchmark import parse_params, run_benchmark
+from app.benchmark import (
+    DEFAULT_BASE_URL,
+    parse_params,
+    parse_slow_ms,
+    run_benchmark,
+    run_slow,
+)
 from app.errors import MethodNotAllowedError, NotFoundError, ValidationError
 from app.models import Task, TaskStatus
 from app.repository import TaskRepository
@@ -38,13 +45,10 @@ def _allowed_methods(segments: Segments) -> list[str] | None:
             return ["GET", "PATCH", "DELETE", "OPTIONS"]
         case ("api", "benchmark"):
             return ["GET", "OPTIONS"]
+        case ("api", "slow"):
+            return ["GET", "POST", "OPTIONS"]
         case _:
             return None
-
-
-def _first(query: Query, key: str) -> str | None:
-    values = query.get(key)
-    return values[0] if values else None
 
 
 def _status_filter(query: Query) -> TaskStatus | None:
@@ -57,7 +61,8 @@ def _status_filter(query: Query) -> TaskStatus | None:
         raise ValidationError({"status": "must be one of: pending, in_progress, done"})
 
 
-def dispatch(method: str, path: str, query: Query, body: Body, repo: TaskRepository) -> Dispatched:
+def dispatch(method: str, path: str, query: Query, body: Body, repo: TaskRepository,
+             base_url: str = DEFAULT_BASE_URL) -> Dispatched:
     segments = tuple(part for part in path.split("/") if part)
 
     match (method, segments):
@@ -86,8 +91,10 @@ def dispatch(method: str, path: str, query: Query, body: Body, repo: TaskReposit
             return HTTPStatus.NO_CONTENT, None
 
         case ("GET", ("api", "benchmark")):
-            workers, n = parse_params(_first(query, "workers"), _first(query, "n"))
-            return HTTPStatus.OK, run_benchmark(workers, n)
+            return HTTPStatus.OK, run_benchmark(**parse_params(query), base_url=base_url)
+
+        case ("GET" | "POST", ("api", "slow")):
+            return HTTPStatus.OK, run_slow(parse_slow_ms(query))
 
         case _:
             allowed = _allowed_methods(segments)

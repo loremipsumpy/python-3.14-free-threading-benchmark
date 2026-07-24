@@ -31,15 +31,40 @@ time of one) and the diagonal is the no-parallelism reference:
 
 ![Time to run W copies of the same CPU-bound task](benchmark.svg)
 
+## The counterexample: I/O-bound work
+
+![Speedup for the I/O-bound task, higher is better](benchmark-io-speedup.svg)
+
+Same sweep, different task: each worker is a real HTTP client making concurrent GET
+and POST calls to `/api/slow`, an endpoint on this same API that responds after a
+configurable delay (50 ms here), simulating a slow upstream such as a remote API or
+database. Waiting on a socket releases the GIL, so **threads reach ~26x even on the
+standard GIL build**: this is why typical web backends never felt the GIL.
+Free-threading adds little on top (~30x), and subinterpreters pay their per-call
+overhead instead of benefiting.
+
+The two charts together are the honest picture: the GIL only punishes CPU-bound
+pure-Python work; I/O-bound work always scaled with threads. Try both live from the
+benchmark card's CPU-bound / IO-bound toggle in the UI.
+
+Production note: load-testing this feature exposed the `socketserver` default listen
+backlog of 5, which collapses past ~16 concurrent connections (TCP retransmits);
+the server now sets `request_queue_size = 128`.
+
 Reproduce it (the chart generator is stdlib-only too):
 
 ```bash
 cd backend
 # with the standard stack on :8000
 python3 scripts/sweep.py collect --n 200000 --out gil.json
+python3 scripts/sweep.py collect --task io --delay-ms 50 --out io-gil.json
 # swap to the free-threaded stack, then
 python3 scripts/sweep.py collect --n 200000 --out ft.json
-python3 scripts/sweep.py render --gil gil.json --ft ft.json --out ../benchmark.svg
+python3 scripts/sweep.py collect --task io --delay-ms 50 --out io-ft.json
+# render (mode: time or speedup)
+python3 scripts/sweep.py render --gil gil.json --ft ft.json --mode speedup --out ../benchmark-speedup.svg
+python3 scripts/sweep.py render --gil gil.json --ft ft.json --mode time --out ../benchmark.svg
+python3 scripts/sweep.py render --gil io-gil.json --ft io-ft.json --mode speedup --out ../benchmark-io-speedup.svg
 ```
 
 ## Run

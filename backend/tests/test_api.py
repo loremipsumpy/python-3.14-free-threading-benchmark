@@ -212,5 +212,13 @@ class PreflightCorsTests(ApiTestCase):
         )
 
 
+class ServerConfigTests(ApiTestCase):
+    def test_request_queue_size_raised_for_concurrent_io(self):
+        # Default socketserver backlog is 5; the io benchmark opens up to 32 concurrent
+        # /api/slow connections. Behavioral proof is the live io run; here we guard the
+        # value (a timing-based concurrency assertion would be flaky in CI).
+        self.assertEqual(self.server.request_queue_size, 128)
+
+
 if __name__ == "__main__":
     unittest.main()

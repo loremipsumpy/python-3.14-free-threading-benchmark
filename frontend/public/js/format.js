@@ -25,6 +25,14 @@ export function prettyBody(value) {
   }
 }
 
+/** Meta line for a benchmark result: "CPU-bound · GIL on · checksum … · workers … · n …"
+ *  (io variant shows "delay …ms" instead of n). */
+export function benchMetaLine(res) {
+  const task = res.task === 'io' ? 'IO-bound' : 'CPU-bound';
+  const detail = res.task === 'io' ? `delay ${res.delay_ms}ms` : `n ${res.n}`;
+  return `${task} · GIL ${res.gil_enabled ? 'on' : 'off'} · checksum ${res.checksum} · workers ${res.workers} · ${detail}`;
+}
+
 const BENCH_KEYS = ['sequential', 'threads', 'interpreters'];
 
 /** results_ms → ordered bars [{key,label,ms,pct}], pct proportional to the max (no NaN). */

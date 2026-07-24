@@ -1,8 +1,10 @@
 """Tests for the 3.14 concurrency benchmark.
 
-Uses a small `n` (10000) to keep the suite fast. Timings are **not** asserted (at
-small `n` subinterpreter startup dominates ⇒ it would be flaky); only checksum
-correctness and parameter validation.
+Uses a small `n` (10000) to keep the suite fast. CPU timings are **not** asserted (at
+small `n` subinterpreter startup dominates and it would be flaky); only checksum
+correctness and validation. The io task's threads-scale-under-GIL claim IS asserted:
+sleep timing is deterministic and GIL release during blocking is core-independent, so
+`threads < sequential / 2` is robust.
 """
 
 import json
@@ -60,38 +62,78 @@ class RunBenchmarkTests(unittest.TestCase):
 
 
 class ParseParamsTests(unittest.TestCase):
-    def test_defaults(self):
-        self.assertEqual(parse_params(None, None), (4, 200000))
+    def test_cpu_defaults(self):
+        self.assertEqual(parse_params({}), {"workers": 4, "task": "cpu", "n": 200000})
 
-    def test_valid_values(self):
-        self.assertEqual(parse_params("6", "10000"), (6, 10000))
+    def test_cpu_explicit(self):
+        self.assertEqual(
+            parse_params({"workers": ["6"], "n": ["10000"]}),
+            {"workers": 6, "task": "cpu", "n": 10000},
+        )
 
     def test_workers_boundary_32_ok(self):
-        self.assertEqual(parse_params("32", None), (32, 200000))
+        self.assertEqual(parse_params({"workers": ["32"]})["workers"], 32)
 
     def test_workers_out_of_range_high(self):
         with self.assertRaises(ValidationError) as ctx:
-            parse_params("33", None)
-        self.assertIn("workers", ctx.exception.details)
+            parse_params({"workers": ["33"]})
         self.assertIn("[1, 32]", ctx.exception.details["workers"])
 
     def test_workers_out_of_range_low(self):
         with self.assertRaises(ValidationError):
-            parse_params("0", None)
+            parse_params({"workers": ["0"]})
 
-    def test_n_too_small(self):
+    def test_n_out_of_range(self):
         with self.assertRaises(ValidationError) as ctx:
-            parse_params(None, "5000")
+            parse_params({"n": ["5000"]})
         self.assertIn("n", ctx.exception.details)
 
-    def test_n_too_large(self):
-        with self.assertRaises(ValidationError):
-            parse_params(None, "6000000")
-
-    def test_non_numeric(self):
+    def test_non_numeric_workers(self):
         with self.assertRaises(ValidationError) as ctx:
-            parse_params("abc", None)
+            parse_params({"workers": ["abc"]})
         self.assertIn("workers", ctx.exception.details)
+
+    def test_io_defaults(self):
+        self.assertEqual(
+            parse_params({"task": ["io"]}),
+            {"workers": 4, "task": "io", "delay_ms": 50},
+        )
+
+    def test_io_with_delay(self):
+        self.assertEqual(
+            parse_params({"task": ["io"], "workers": ["8"], "delay_ms": ["100"]}),
+            {"workers": 8, "task": "io", "delay_ms": 100},
+        )
+
+    def test_io_rejects_n(self):
+        with self.assertRaises(ValidationError) as ctx:
+            parse_params({"task": ["io"], "n": ["200000"]})
+        self.assertEqual(ctx.exception.details["n"], "n only applies to task=cpu")
+
+    def test_cpu_rejects_delay(self):
+        with self.assertRaises(ValidationError) as ctx:
+            parse_params({"task": ["cpu"], "delay_ms": ["50"]})
+        self.assertIn("delay_ms", ctx.exception.details)
+
+    def test_invalid_task(self):
+        with self.assertRaises(ValidationError) as ctx:
+            parse_params({"task": ["gpu"]})
+        self.assertIn("task", ctx.exception.details)
+
+    def test_delay_out_of_range(self):
+        with self.assertRaises(ValidationError) as ctx:
+            parse_params({"task": ["io"], "delay_ms": ["1001"]})
+        self.assertIn("delay_ms", ctx.exception.details)
+
+
+class RunBenchmarkTaskTests(unittest.TestCase):
+    # io behavior is E2E-only: it makes real HTTP round-trips to /api/slow, so it needs a
+    # live server (see the endpoint tests). Only the cpu response shape is unit-checkable.
+    def test_cpu_response_adds_task_keeps_n(self):
+        result = run_benchmark(2, task="cpu", n=SMALL_N)
+        self.assertEqual(result["task"], "cpu")
+        self.assertIn("n", result)
+        self.assertNotIn("delay_ms", result)
 
 
 class BenchmarkEndpointE2ETests(unittest.TestCase):
@@ -139,6 +181,36 @@ class BenchmarkEndpointE2ETests(unittest.TestCase):
         self.assertEqual(resp.status, HTTPStatus.UNPROCESSABLE_ENTITY)
         self.assertEqual(payload["error"]["code"], "validation_error")
         self.assertIn("workers", payload["error"]["details"])
+
+    def test_io_endpoint_scales(self):
+        # Real HTTP: each worker does GET+POST to this server's own /api/slow. Threads
+        # overlap because urllib and the sleep both release the GIL.
+        resp, payload = self.get("/api/benchmark?task=io&workers=4&delay_ms=20")
+        self.assertEqual(resp.status, HTTPStatus.OK)
+        self.assertEqual(payload["task"], "io")
+        self.assertEqual(payload["delay_ms"], 20)
+        self.assertEqual(payload["checksum"], 4)  # 4 workers completed both round-trips
+        self.assertNotIn("n", payload)
+        self.assertLess(
+            payload["results_ms"]["threads"], payload["results_ms"]["sequential"] / 3
+        )
+
+    def test_slow_endpoint_get_and_post(self):
+        for method, path in (("GET", "/api/slow?ms=5"), ("POST", "/api/slow?ms=5")):
+            conn = HTTPConnection("127.0.0.1", self.port)
+            try:
+                conn.request(method, path)
+                resp = conn.getresponse()
+                payload = json.loads(resp.read())
+            finally:
+                conn.close()
+            self.assertEqual(resp.status, HTTPStatus.OK)
+            self.assertEqual(payload, {"ok": True, "ms": 5})
+
+    def test_io_rejects_n_422(self):
+        resp, payload = self.get("/api/benchmark?task=io&n=200000")
+        self.assertEqual(resp.status, HTTPStatus.UNPROCESSABLE_ENTITY)
+        self.assertEqual(payload["error"]["details"]["n"], "n only applies to task=cpu")
 
 
 if __name__ == "__main__":

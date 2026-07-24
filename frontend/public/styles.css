@@ -484,6 +484,7 @@ code { font-family: var(--mono); font-size: 0.9em; }
 }
 .bench-card__head { display: flex; flex-direction: column; gap: 0.3rem; }
 .bench-card__hint { font-size: 0.85rem; color: var(--fg-dim); }
+.bench-card__mode { align-self: flex-start; margin: 0.4rem 0 0.15rem; }
 .bench-card__controls {
   grid-column: 1;
   display: flex;

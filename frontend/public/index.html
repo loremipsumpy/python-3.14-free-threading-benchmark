@@ -92,7 +92,11 @@
         <div class="bench-card__head">
           <span class="eyebrow">Benchmark</span>
           <h2 class="panel__title" id="bench-title">Concurrency 3.14</h2>
-          <p class="bench-card__hint">
+          <div class="segmented bench-card__mode" id="bench-mode" role="group" aria-label="Benchmark mode">
+            <button class="seg is-active" type="button" data-task="cpu" aria-pressed="true">CPU-bound</button>
+            <button class="seg" type="button" data-task="io" aria-pressed="false">IO-bound</button>
+          </div>
+          <p class="bench-card__hint" id="bench-hint">
             The same CPU-bound function in three modes: sequential · threads · interpreters.
           </p>
         </div>
@@ -102,9 +106,13 @@
             <span class="field__label">workers</span>
             <input class="input" name="workers" type="number" min="1" max="32" value="4" />
           </label>
-          <label class="field field--tiny">
+          <label class="field field--tiny" id="bench-n-field">
             <span class="field__label">n</span>
             <input class="input" name="n" type="number" min="10000" max="5000000" step="10000" value="200000" />
+          </label>
+          <label class="field field--tiny" id="bench-delay-field" hidden>
+            <span class="field__label">delay (ms)</span>
+            <input class="input" name="delay_ms" type="number" min="1" max="1000" value="50" disabled />
           </label>
           <button class="btn btn--primary" type="submit" id="bench-run">Run benchmark</button>
         </form>

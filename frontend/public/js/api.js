@@ -63,6 +63,23 @@ export function buildQuery(params) {
   return pairs.length ? `?${pairs.join('&')}` : '';
 }
 
+/**
+ * Builds the benchmark query params, enforcing the contract's cpu/io exclusivity:
+ * io uses `delay_ms` (sending `n` is a 422), cpu/default uses `n` (sending `delay_ms` is
+ * a 422). No `task` ⇒ cpu semantics (backend default), keeping older callers working.
+ */
+export function benchmarkParams({ task, workers, n, delay_ms } = {}) {
+  const params = {};
+  if (task !== undefined) params.task = task;
+  if (workers !== undefined) params.workers = workers;
+  if (task === 'io') {
+    if (delay_ms !== undefined) params.delay_ms = delay_ms;
+  } else if (n !== undefined) {
+    params.n = n;
+  }
+  return params;
+}
+
 const FALLBACK_CODE = {
   400: 'bad_request',
   404: 'not_found',
@@ -155,7 +172,7 @@ export function createApi({
       request('PATCH', `/api/tasks/${encodeURIComponent(id)}`, { body: omitEmpty(changes) }),
     deleteTask: (id) => request('DELETE', `/api/tasks/${encodeURIComponent(id)}`),
     runBenchmark: (params = {}) =>
-      request('GET', `/api/benchmark${buildQuery({ workers: params.workers, n: params.n })}`),
+      request('GET', `/api/benchmark${buildQuery(benchmarkParams(params))}`),
   };
 }
 

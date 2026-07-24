@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { formatMs, statusFamily, prettyBody, benchBars } from '../public/js/format.js';
+import { formatMs, statusFamily, prettyBody, benchBars, benchMetaLine } from '../public/js/format.js';
 
 test('formatMs: 1 decimal + suffix, and "-" for non-numbers', () => {
   assert.equal(formatMs(12.4), '12.4 ms');
@@ -35,6 +35,17 @@ test('benchBars: fixed order, pct proportional to the max, no NaN', () => {
   assert.deepEqual(bars.map((b) => b.key), ['sequential', 'threads', 'interpreters']);
   assert.deepEqual(bars.map((b) => b.pct), [100, 98, 25]);
   assert.deepEqual(bars.map((b) => b.ms), [1200, 1180, 300]);
+});
+
+test('benchMetaLine: cpu shows n; io shows delay; reflects the GIL state', () => {
+  assert.equal(
+    benchMetaLine({ task: 'cpu', gil_enabled: true, checksum: 17984, workers: 4, n: 200000 }),
+    'CPU-bound · GIL on · checksum 17984 · workers 4 · n 200000',
+  );
+  assert.equal(
+    benchMetaLine({ task: 'io', gil_enabled: false, checksum: 0, workers: 4, delay_ms: 50 }),
+    'IO-bound · GIL off · checksum 0 · workers 4 · delay 50ms',
+  );
 });
 
 test('benchBars: all zero or a missing key → pct 0 (no NaN)', () => {
