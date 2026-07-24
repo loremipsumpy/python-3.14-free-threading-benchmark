@@ -96,5 +96,33 @@ class RenderTests(unittest.TestCase):
         self.assertNotIn("\u2014", self.svg)  # em dash codepoint, written escaped
 
 
+class SpeedupRenderTests(unittest.TestCase):
+    def setUp(self):
+        # speedup = sequential / mode. threads 8000/1000 = 8.0x (the max) -> axis_max 10.
+        self.gil = fake_run(gil=True, seq=8000, threads=1000, interp=2000)
+        self.ft = fake_run(gil=False, seq=8000, threads=1000, interp=2500)
+        self.svg = render_svg(self.gil, self.ft, mode="speedup")
+
+    def test_five_data_polylines(self):
+        root = ET.fromstring(self.svg)
+        self.assertEqual(len(root.findall(f".//{SVG_NS}polyline")), 5)
+
+    def test_reference_is_flat_at_1x(self):
+        # 1.0x on axis_max(8.0)=10 -> y = 476 - (1/10)*412 = 434.8, at every worker.
+        self.assertIn("70.0,434.8", self.svg)
+        self.assertIn("710.0,434.8", self.svg)
+
+    def test_hand_calculated_speedup(self):
+        # threads (GIL) 8000/1000 = 8.0x at w=1 -> x=70.0, y=476-(8/10)*412=146.4
+        self.assertIn("70.0,146.4", self.svg)
+
+    def test_speedup_labels(self):
+        for text in (
+            "Speedup vs sequential, W copies of the same task (n=200000, higher is better)",
+            "speedup (x)",
+        ):
+            self.assertIn(text, self.svg)
+
+
 if __name__ == "__main__":
     unittest.main()

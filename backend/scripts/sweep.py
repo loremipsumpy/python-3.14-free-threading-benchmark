@@ -143,37 +143,51 @@ def y_ticks(y_max: float) -> list[float]:
     return ticks
 
 
-def _series(gil_run: dict, ft_run: dict):
-    # sequential is drawn once, from the GIL run, as the reference line (do not add an
-    # FT sequential: it would be a redundant sixth line).
+def _series(gil_run: dict, ft_run: dict, mode: str):
+    """Series as (label, color, [(workers, value), ...]) for the chart mode.
+
+    time: value is seconds (ms / 1000); the sequential line comes from the GIL run only
+    (an FT sequential would be a redundant sixth line). speedup: value is own-build
+    sequential / mode, so the sequential series falls out as a flat 1x reference.
+    """
+    style = SERIES_STYLE
+    if mode == "speedup":
+        def measure(run, key):
+            return [(p["workers"], p["sequential"] / p[key]) for p in run["points"]]
+    else:
+        def measure(run, key):
+            return [(p["workers"], p[key] / 1000.0) for p in run["points"]]
     return [
-        ("sequential (reference)", gil_run, "sequential", SERIES_STYLE["seq"]),
-        ("threads (GIL)", gil_run, "threads", SERIES_STYLE["threads_gil"]),
-        ("interpreters (GIL)", gil_run, "interpreters", SERIES_STYLE["interp_gil"]),
-        ("threads (free-threaded)", ft_run, "threads", SERIES_STYLE["threads_ft"]),
-        ("interpreters (free-threaded)", ft_run, "interpreters", SERIES_STYLE["interp_ft"]),
+        ("sequential (reference)", style["seq"], measure(gil_run, "sequential")),
+        ("threads (GIL)", style["threads_gil"], measure(gil_run, "threads")),
+        ("interpreters (GIL)", style["interp_gil"], measure(gil_run, "interpreters")),
+        ("threads (free-threaded)", style["threads_ft"], measure(ft_run, "threads")),
+        ("interpreters (free-threaded)", style["interp_ft"], measure(ft_run, "interpreters")),
     ]
 
 
-def _coord(point: dict, key: str, y_max: float) -> str:
-    x = x_for_workers(point["workers"])
-    y = y_for_seconds(point[key] / 1000.0, y_max)
-    return f"{x:.1f},{y:.1f}"
-
-
-def render_svg(gil_run: dict, ft_run: dict) -> str:
-    series = _series(gil_run, ft_run)
-    raw_max = max(
-        point[key] / 1000.0 for _, run, key, _ in series for point in run["points"]
+def _polyline_points(points: list, y_max: float) -> str:
+    return " ".join(
+        f"{x_for_workers(w):.1f},{y_for_seconds(v, y_max):.1f}" for w, v in points
     )
-    y_max = axis_max(raw_max)
+
+
+def render_svg(gil_run: dict, ft_run: dict, mode: str = "time") -> str:
+    series = _series(gil_run, ft_run, mode)
+    y_max = axis_max(max(value for _, _, points in series for _, value in points))
     n = gil_run["n"]
+    if mode == "speedup":
+        title = f"Speedup vs sequential, W copies of the same task (n={n}, higher is better)"
+        y_label = "speedup (x)"
+    else:
+        title = f"Time to run W copies of the same CPU-bound task (n={n})"
+        y_label = "seconds"
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" '
         f'viewBox="0 0 {WIDTH} {HEIGHT}" font-family="sans-serif">',
         f'<text x="{WIDTH / 2:.0f}" y="32" text-anchor="middle" font-size="18" '
-        f'fill="{INK}">{escape(f"Time to run W copies of the same CPU-bound task (n={n})")}</text>',
+        f'fill="{INK}">{escape(title)}</text>',
     ]
 
     # Horizontal grid + y-axis labels (seconds), on whole-number gridlines.
@@ -204,20 +218,20 @@ def render_svg(gil_run: dict, ft_run: dict) -> str:
     parts.append(
         f'<text x="20" y="{MARGIN_TOP + PLOT_H / 2:.0f}" text-anchor="middle" '
         f'font-size="13" fill="{INK}" transform="rotate(-90 20 {MARGIN_TOP + PLOT_H / 2:.0f})">'
-        f"seconds</text>"
+        f"{escape(y_label)}</text>"
     )
 
     # Data series.
-    for _, run, key, color in series:
-        pts = " ".join(_coord(point, key, y_max) for point in run["points"])
+    for _label, color, points in series:
         parts.append(
-            f'<polyline fill="none" stroke="{color}" stroke-width="2.5" points="{pts}"/>'
+            f'<polyline fill="none" stroke="{color}" stroke-width="2.5" '
+            f'points="{_polyline_points(points, y_max)}"/>'
         )
 
     # Legend (swatches as <rect>, labels as <text>).
     legend_x = MARGIN_LEFT + PLOT_W + 20
     legend_y = MARGIN_TOP + 10
-    for i, (label, _, _, color) in enumerate(series):
+    for i, (label, color, _points) in enumerate(series):
         row_y = legend_y + i * 24
         parts.append(
             f'<rect x="{legend_x}" y="{row_y - 10}" width="18" height="4" fill="{color}"/>'
@@ -256,6 +270,10 @@ def main(argv=None) -> None:
     render_parser.add_argument(
         "--ft", required=True, help="run JSON from the free-threaded build"
     )
+    render_parser.add_argument(
+        "--mode", choices=("time", "speedup"), default="time",
+        help="time: seconds per run; speedup: sequential/mode, higher is better",
+    )
     render_parser.add_argument("--out", default="benchmark.svg")
 
     args = parser.parse_args(argv)
@@ -275,8 +293,8 @@ def main(argv=None) -> None:
         with open(args.ft, encoding="utf-8") as handle:
             ft_run = json.load(handle)
         with open(args.out, "w", encoding="utf-8") as handle:
-            handle.write(render_svg(gil_run, ft_run))
-        print(f"wrote {args.out}", file=sys.stderr)
+            handle.write(render_svg(gil_run, ft_run, args.mode))
+        print(f"wrote {args.out} ({args.mode})", file=sys.stderr)
 
 
 if __name__ == "__main__":

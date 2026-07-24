@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="540" viewBox="0 0 920 540" font-family="sans-serif">
+<text x="460" y="32" text-anchor="middle" font-size="18" fill="#888888">Speedup vs sequential, W copies of the same task (n=200000, higher is better)</text>
+<line x1="70" y1="476.0" x2="710" y2="476.0" stroke="#888888" stroke-opacity="0.25"/>
+<text x="60" y="480.0" text-anchor="end" font-size="12" fill="#888888">0</text>
+<line x1="70" y1="373.0" x2="710" y2="373.0" stroke="#888888" stroke-opacity="0.25"/>
+<text x="60" y="377.0" text-anchor="end" font-size="12" fill="#888888">4</text>
+<line x1="70" y1="270.0" x2="710" y2="270.0" stroke="#888888" stroke-opacity="0.25"/>
+<text x="60" y="274.0" text-anchor="end" font-size="12" fill="#888888">8</text>
+<line x1="70" y1="167.0" x2="710" y2="167.0" stroke="#888888" stroke-opacity="0.25"/>
+<text x="60" y="171.0" text-anchor="end" font-size="12" fill="#888888">12</text>
+<line x1="70" y1="64.0" x2="710" y2="64.0" stroke="#888888" stroke-opacity="0.25"/>
+<text x="60" y="68.0" text-anchor="end" font-size="12" fill="#888888">16</text>
+<text x="70.0" y="496" text-anchor="middle" font-size="12" fill="#888888">1</text>
+<text x="131.9" y="496" text-anchor="middle" font-size="12" fill="#888888">4</text>
+<text x="214.5" y="496" text-anchor="middle" font-size="12" fill="#888888">8</text>
+<text x="297.1" y="496" text-anchor="middle" font-size="12" fill="#888888">12</text>
+<text x="379.7" y="496" text-anchor="middle" font-size="12" fill="#888888">16</text>
+<text x="462.3" y="496" text-anchor="middle" font-size="12" fill="#888888">20</text>
+<text x="544.8" y="496" text-anchor="middle" font-size="12" fill="#888888">24</text>
+<text x="627.4" y="496" text-anchor="middle" font-size="12" fill="#888888">28</text>
+<text x="710.0" y="496" text-anchor="middle" font-size="12" fill="#888888">32</text>
+<text x="390" y="522" text-anchor="middle" font-size="13" fill="#888888">workers (w)</text>
+<text x="20" y="270" text-anchor="middle" font-size="13" fill="#888888" transform="rotate(-90 20 270)">speedup (x)</text>
+<polyline fill="none" stroke="#8c8c8c" stroke-width="2.5" points="70.0,450.2 90.6,450.2 111.3,450.2 131.9,450.2 152.6,450.2 173.2,450.2 193.9,450.2 214.5,450.2 235.2,450.2 255.8,450.2 276.5,450.2 297.1,450.2 317.7,450.2 338.4,450.2 359.0,450.2 379.7,450.2 400.3,450.2 421.0,450.2 441.6,450.2 462.3,450.2 482.9,450.2 503.5,450.2 524.2,450.2 544.8,450.2 565.5,450.2 586.1,450.2 606.8,450.2 627.4,450.2 648.1,450.2 668.7,450.2 689.4,450.2 710.0,450.2"/>
+<polyline fill="none" stroke="#e15759" stroke-width="2.5" points="70.0,450.2 90.6,453.1 111.3,450.6 131.9,450.9 152.6,452.7 173.2,453.2 193.9,453.3 214.5,453.1 235.2,453.0 255.8,453.0 276.5,453.5 297.1,452.8 317.7,452.5 338.4,452.7 359.0,453.0 379.7,453.7 400.3,452.8 421.0,453.1 441.6,453.1 462.3,453.0 482.9,453.6 503.5,453.5 524.2,453.0 544.8,453.5 565.5,453.1 586.1,452.8 606.8,453.2 627.4,453.4 648.1,453.5 668.7,453.0 689.4,453.3 710.0,453.0"/>
+<polyline fill="none" stroke="#4e79a7" stroke-width="2.5" points="70.0,453.5 90.6,430.9 111.3,410.4 131.9,385.1 152.6,368.2 173.2,345.4 193.9,329.3 214.5,307.8 235.2,298.3 255.8,280.2 276.5,269.9 297.1,247.7 317.7,247.5 338.4,211.6 359.0,234.7 379.7,236.3 400.3,241.3 421.0,237.5 441.6,230.7 462.3,217.4 482.9,213.3 503.5,199.2 524.2,200.3 544.8,197.3 565.5,191.2 586.1,188.2 606.8,184.3 627.4,178.0 648.1,191.2 668.7,166.2 689.4,181.8 710.0,178.4"/>
+<polyline fill="none" stroke="#f28e2b" stroke-width="2.5" points="70.0,450.2 90.6,425.2 111.3,401.9 131.9,377.0 152.6,372.2 173.2,333.0 193.9,306.6 214.5,286.2 235.2,264.2 255.8,254.6 276.5,239.5 297.1,249.2 317.7,203.5 338.4,196.0 359.0,200.5 379.7,161.1 400.3,221.7 421.0,213.4 441.6,197.0 462.3,199.0 482.9,177.3 503.5,182.7 524.2,174.2 544.8,150.8 565.5,157.2 586.1,154.8 606.8,137.9 627.4,137.8 648.1,133.5 668.7,123.9 689.4,138.0 710.0,129.0"/>
+<polyline fill="none" stroke="#59a14f" stroke-width="2.5" points="70.0,454.0 90.6,432.2 111.3,414.8 131.9,403.4 152.6,389.1 173.2,374.5 193.9,378.9 214.5,370.6 235.2,361.2 255.8,378.9 276.5,356.1 297.1,376.6 317.7,374.8 338.4,373.6 359.0,375.8 379.7,365.3 400.3,375.4 421.0,371.9 441.6,355.3 462.3,357.7 482.9,371.4 503.5,368.7 524.2,364.7 544.8,367.5 565.5,367.0 586.1,365.8 606.8,366.9 627.4,354.0 648.1,363.4 668.7,365.2 689.4,352.8 710.0,365.6"/>
+<rect x="730" y="64" width="18" height="4" fill="#8c8c8c"/>
+<text x="756" y="70" font-size="12" fill="#888888">sequential (reference)</text>
+<rect x="730" y="88" width="18" height="4" fill="#e15759"/>
+<text x="756" y="94" font-size="12" fill="#888888">threads (GIL)</text>
+<rect x="730" y="112" width="18" height="4" fill="#4e79a7"/>
+<text x="756" y="118" font-size="12" fill="#888888">interpreters (GIL)</text>
+<rect x="730" y="136" width="18" height="4" fill="#f28e2b"/>
+<text x="756" y="142" font-size="12" fill="#888888">threads (free-threaded)</text>
+<rect x="730" y="160" width="18" height="4" fill="#59a14f"/>
+<text x="756" y="166" font-size="12" fill="#888888">interpreters (free-threaded)</text>
+</svg>

@@ -16,13 +16,20 @@ With the GIL, threads are serialized (even slightly slower than sequential due t
 
 ## Scaling from 1 to 32 workers
 
-![Time to run W copies of the same CPU-bound task](benchmark.svg)
-
 Measured on a Ryzen 9 5950X (16 cores / 32 threads), n=200000, both builds sweeping
-workers 1 to 32. Each mode runs the same task W times: sequential is the linear
-reference and GIL threads track it slightly worse (lock contention), while
-subinterpreters and free-threaded threads stay flat: W copies finish in roughly the
-time of one until the physical cores run out.
+workers 1 to 32. Each mode runs the same task W times.
+
+![Speedup vs sequential, higher is better](benchmark-speedup.svg)
+
+Speedup is how many copies finish per unit of sequential time: free-threaded threads
+reach ~13x and GIL subinterpreters ~11x, while GIL threads stay pinned at 1x no
+matter how many you add. Subinterpreters on the free-threaded build plateau around
+4x: that combination still pays heavy cross-interpreter costs.
+
+The same data as wall-clock time, where flat means winning (W copies in roughly the
+time of one) and the diagonal is the no-parallelism reference:
+
+![Time to run W copies of the same CPU-bound task](benchmark.svg)
 
 Reproduce it (the chart generator is stdlib-only too):
 
