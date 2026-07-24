@@ -1,10 +1,10 @@
 # Free-threaded variant (PEP 779, https://peps.python.org/pep-0779/): the SAME app
 # running under CPython 3.14t (no GIL).
-# The app code doesn't change a single line — this image validates the
+# The app code doesn't change a single line. This image validates the
 # "free-threading-ready" design (ThreadingHTTPServer + one thread per request).
 #
 # Technical decision: the 3.14t interpreter is installed with `uv` (a runtime manager,
-# not an app dependency — the equivalent of installing python3). Its path is resolved at
+# not an app dependency: the equivalent of installing python3). Its path is resolved at
 # build time and symlinked to /usr/local/bin/python3.14t, so the CMD invokes the
 # GIL-less binary directly (no uv or venv at runtime).
 FROM python:3.14-slim

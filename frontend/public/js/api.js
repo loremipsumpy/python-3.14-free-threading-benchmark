@@ -1,4 +1,4 @@
-// api.js — the ONLY network layer of the frontend.
+// api.js: the ONLY network layer of the frontend.
 //
 // Consumes the tasks API (contract in docs/API_CONTRACT.md) and notifies every call
 // (method, path, status, duration ms, request/response bodies) over two channels without

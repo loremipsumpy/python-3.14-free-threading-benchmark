@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>HTTP Bench — Tasks API Console</title>
+    <title>HTTP Bench - Tasks API Console</title>
     <link rel="stylesheet" href="/styles.css" />
     <script type="module" src="/js/app.mjs"></script>
   </head>
@@ -18,8 +18,8 @@
       <div class="readout" id="readout" data-state="unknown" aria-live="polite">
         <span class="readout__led" aria-hidden="true"></span>
         <span class="readout__text" data-conn-text>not connected yet</span>
-        <span class="readout__meta"><span class="readout__key">gil</span> <span class="readout__val" data-gil>—</span></span>
-        <span class="readout__meta"><span class="readout__key">py</span> <span class="readout__val" data-py>—</span></span>
+        <span class="readout__meta"><span class="readout__key">gil</span> <span class="readout__val" data-gil>-</span></span>
+        <span class="readout__meta"><span class="readout__key">py</span> <span class="readout__val" data-py>-</span></span>
       </div>
     </header>
 
@@ -93,7 +93,7 @@
           <span class="eyebrow">Benchmark</span>
           <h2 class="panel__title" id="bench-title">Concurrency 3.14</h2>
           <p class="bench-card__hint">
-            The same CPU-bound function in three modes — sequential · threads · interpreters.
+            The same CPU-bound function in three modes: sequential · threads · interpreters.
           </p>
         </div>
 
@@ -117,17 +117,17 @@
             <li class="bar">
               <span class="bar__label">sequential</span>
               <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
-              <span class="bar__value">— ms</span>
+              <span class="bar__value">- ms</span>
             </li>
             <li class="bar">
               <span class="bar__label">threads</span>
               <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
-              <span class="bar__value">— ms</span>
+              <span class="bar__value">- ms</span>
             </li>
             <li class="bar bar--accent">
               <span class="bar__label">interpreters</span>
               <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
-              <span class="bar__value">— ms</span>
+              <span class="bar__value">- ms</span>
             </li>
           </ul>
           <p class="bench-card__meta" id="bench-meta" hidden></p>

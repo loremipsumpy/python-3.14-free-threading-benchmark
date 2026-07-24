@@ -1,6 +1,6 @@
-# Static frontend — server built 100% with Node 24 builtins (zero npm).
+# Static frontend: server built 100% with Node 24 builtins (zero npm).
 # Official slim image (Debian): the base already ships the full runtime, so there is no
-# `npm install` or package.json — same zero-dependency philosophy as the backend.
+# `npm install` or package.json - same zero-dependency philosophy as the backend.
 FROM node:24-slim
 
 WORKDIR /app

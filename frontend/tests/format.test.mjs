@@ -1,4 +1,4 @@
-// Tests for format.js — pure presentation logic (no DOM), used by log.js/ui.js/app.mjs.
+// Tests for format.js: pure presentation logic (no DOM), used by log.js/ui.js/app.mjs.
 // Run from frontend/ with: node --test
 
 import { test } from 'node:test';
@@ -6,13 +6,13 @@ import assert from 'node:assert/strict';
 
 import { formatMs, statusFamily, prettyBody, benchBars } from '../public/js/format.js';
 
-test('formatMs: 1 decimal + suffix, and "—" for non-numbers', () => {
+test('formatMs: 1 decimal + suffix, and "-" for non-numbers', () => {
   assert.equal(formatMs(12.4), '12.4 ms');
   assert.equal(formatMs(12.36), '12.4 ms');
   assert.equal(formatMs(0), '0.0 ms');
-  assert.equal(formatMs(null), '—');
-  assert.equal(formatMs(undefined), '—');
-  assert.equal(formatMs(NaN), '—');
+  assert.equal(formatMs(null), '-');
+  assert.equal(formatMs(undefined), '-');
+  assert.equal(formatMs(NaN), '-');
 });
 
 test('statusFamily: maps to ok/warn/err by HTTP family (0 = network down)', () => {
@@ -23,8 +23,8 @@ test('statusFamily: maps to ok/warn/err by HTTP family (0 = network down)', () =
 });
 
 test('prettyBody: null/undefined → placeholder; string as-is; object/array → indented JSON', () => {
-  assert.equal(prettyBody(null), '— no body —');
-  assert.equal(prettyBody(undefined), '— no body —');
+  assert.equal(prettyBody(null), '(no body)');
+  assert.equal(prettyBody(undefined), '(no body)');
   assert.equal(prettyBody('plain text'), 'plain text');
   assert.equal(prettyBody({ a: 1 }), '{\n  "a": 1\n}');
   assert.equal(prettyBody([1, 2]), '[\n  1,\n  2\n]');

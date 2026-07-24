@@ -9,7 +9,7 @@ values are never concatenated into the SQL.
     ('SELECT * FROM tasks WHERE id = ?', ['42'])
 
 Rule: only *values* are interpolated. *Identifiers* (table, column, `ORDER BY ... DESC`)
-must be static template text — a SQL parameter cannot be an identifier.
+must be static template text: a SQL parameter cannot be an identifier.
 """
 
 from string.templatelib import Interpolation, Template

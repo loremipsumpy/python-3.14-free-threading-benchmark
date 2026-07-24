@@ -1,4 +1,4 @@
-# Task CRUD API — Python 3.14 (standard build, GIL enabled).
+# Task CRUD API: Python 3.14 (standard build, GIL enabled).
 # 100% stdlib: no pip, no extra packages. The base image IS the runtime (the
 # equivalent of having python3 installed locally), not an app dependency.
 FROM python:3.14-slim

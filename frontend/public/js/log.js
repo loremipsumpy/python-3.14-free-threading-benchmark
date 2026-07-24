@@ -1,4 +1,4 @@
-// log.js — MONITOR panel: subscribes to api.js notifications (`api.events`) and renders
+// log.js - MONITOR panel: subscribes to api.js notifications (`api.events`) and renders
 // each request as an HTTP "wire" entry. It knows nothing about the network: it only
 // consumes the events api.js emits. Errors are NOT hidden: every failed request
 // (422, 404, network down with status 0) shows up as a red/amber entry.

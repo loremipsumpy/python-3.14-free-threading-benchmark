@@ -1,4 +1,4 @@
-// app.mjs — browser bootstrap: creates the api client, wires the monitor (log) and the
+// app.mjs - browser bootstrap: creates the api client, wires the monitor (log) and the
 // tasks panel, feeds the connection readout from the event stream + health, and drives the
 // benchmark card. It is the only piece that joins everything; the logic lives in the
 // modules it orchestrates (api.js / log.js / ui.js / format.js).

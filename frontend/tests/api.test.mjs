@@ -1,4 +1,4 @@
-// Tests for api.js — the frontend's only network layer (node:test + node:assert/strict).
+// Tests for api.js: the frontend's only network layer (node:test + node:assert/strict).
 // Run from frontend/ with: node --test
 //
 // All the network is injected: createApi({ fetch, now, onLog }). We use a fake `fetch`

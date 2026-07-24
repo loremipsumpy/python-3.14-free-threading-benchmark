@@ -1,5 +1,5 @@
 /* ============================================================================
-   HTTP Bench — tasks API console (Python 3.14 · Node 24)
+   HTTP Bench - tasks API console (Python 3.14 · Node 24)
 
    Design thesis: "control desk vs. signal monitor". The left panel is a light desk
    (task control); the right one, a dark scope (the HTTP wire). That light/dark
@@ -32,7 +32,7 @@
   --fg-on-dark: #e9edf3;
   --fg-on-dark-dim: #98a2b3;
 
-  /* Signal (brand accent) — technical teal, not one of the AI defaults */
+  /* Signal (brand accent): technical teal, not one of the AI defaults */
   --signal: #12b0a0;
   --signal-deep: #0b7d71;
   --signal-on-dark: #33d6c3;

@@ -1,4 +1,4 @@
-// ui.js — CONTROL panel: lists, creates, filters, edits (inline PATCH) and deletes tasks,
+// ui.js - CONTROL panel: lists, creates, filters, edits (inline PATCH) and deletes tasks,
 // consuming ONLY api.js (never fetch directly). No innerHTML with user data: rows come
 // from the <template> and are filled with textContent.
 //

@@ -56,7 +56,7 @@ class _Handler(BaseHTTPRequestHandler):
             self._respond(status, payload, preflight=is_preflight)
         except ApiError as err:
             self._respond_error(err)
-        except Exception:  # noqa: BLE001 — safety net: never leak a traceback to the client
+        except Exception:  # noqa: BLE001 - safety net: never leak a traceback to the client
             _log.exception("unhandled error handling %s %s", method, self.path)
             self._respond_error(ApiError())
 

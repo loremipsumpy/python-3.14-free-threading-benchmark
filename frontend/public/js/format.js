@@ -1,10 +1,10 @@
-// format.js — pure presentation logic (NO DOM). Shared by log.js, ui.js and app.mjs;
+// format.js: pure presentation logic (NO DOM). Shared by log.js, ui.js and app.mjs;
 // tested with node:test (tests/format.test.mjs). Being DOM-free, it is importable and
 // verifiable in Node without a browser.
 
-/** Duration in ms → "12.4 ms" (1 decimal); non-number → "—". */
+/** Duration in ms → "12.4 ms" (1 decimal); non-number → "-". */
 export function formatMs(ms) {
-  return typeof ms === 'number' && Number.isFinite(ms) ? `${ms.toFixed(1)} ms` : '—';
+  return typeof ms === 'number' && Number.isFinite(ms) ? `${ms.toFixed(1)} ms` : '-';
 }
 
 /** HTTP code → color family: 2xx/3xx ok, 4xx warn, rest (5xx and 0=network down) err. */
@@ -16,7 +16,7 @@ export function statusFamily(status) {
 
 /** Value → text for the log's <pre>: null/undefined placeholder, string as-is, rest JSON. */
 export function prettyBody(value) {
-  if (value === null || value === undefined) return '— no body —';
+  if (value === null || value === undefined) return '(no body)';
   if (typeof value === 'string') return value;
   try {
     return JSON.stringify(value, null, 2);
