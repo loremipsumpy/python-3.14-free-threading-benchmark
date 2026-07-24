@@ -1,0 +1,7 @@
+# Kept out of the image: bytecode, tests, databases, docs.
+__pycache__/
+*.pyc
+tests/
+*.db
+*.db-*
+.gitignore

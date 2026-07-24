@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HTTP Bench — Tasks API Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/js/app.mjs"></script>
+  </head>
+  <body>
+    <header class="bench-head">
+      <div class="bench-head__brand">
+        <span class="bench-head__mark" aria-hidden="true">◑</span>
+        <span class="bench-head__title">HTTP Bench</span>
+        <span class="bench-head__sub">tasks API console · Python&nbsp;3.14</span>
+      </div>
+      <!-- Backend health readout. Fed by app.mjs via GET /api/health + the event stream. -->
+      <div class="readout" id="readout" data-state="unknown" aria-live="polite">
+        <span class="readout__led" aria-hidden="true"></span>
+        <span class="readout__text" data-conn-text>not connected yet</span>
+        <span class="readout__meta"><span class="readout__key">gil</span> <span class="readout__val" data-gil>—</span></span>
+        <span class="readout__meta"><span class="readout__key">py</span> <span class="readout__val" data-py>—</span></span>
+      </div>
+    </header>
+
+    <main class="bench">
+      <!-- ── CONTROL panel: tasks (light desk) ──────────────────────────────── -->
+      <section class="panel panel--control" aria-labelledby="control-title">
+        <div class="panel__head">
+          <span class="eyebrow">Control</span>
+          <h2 class="panel__title" id="control-title">Tasks</h2>
+        </div>
+
+        <form class="composer" id="composer" aria-label="Create task">
+          <div class="composer__grid">
+            <label class="field field--grow">
+              <span class="field__label">Title</span>
+              <input class="input" name="title" type="text" maxlength="200" required autocomplete="off" placeholder="Buy coffee" />
+            </label>
+            <label class="field">
+              <span class="field__label">Priority</span>
+              <select class="select" name="priority">
+                <option value="low">low</option>
+                <option value="medium" selected>medium</option>
+                <option value="high">high</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span class="field__label">Description <span class="field__opt">optional</span></span>
+            <textarea class="input textarea" name="description" rows="2" placeholder="whole bean, medium roast"></textarea>
+          </label>
+          <div class="composer__actions">
+            <button class="btn btn--primary" type="submit">Create task</button>
+          </div>
+          <ul class="composer__errors" id="composer-error" role="alert" hidden></ul>
+        </form>
+
+        <div class="filterbar" role="group" aria-label="Filter by status">
+          <span class="eyebrow">Filter</span>
+          <div class="segmented">
+            <button class="seg is-active" type="button" data-status="" aria-pressed="true">All</button>
+            <button class="seg" type="button" data-status="pending" aria-pressed="false">Pending</button>
+            <button class="seg" type="button" data-status="in_progress" aria-pressed="false">In progress</button>
+            <button class="seg" type="button" data-status="done" aria-pressed="false">Done</button>
+          </div>
+        </div>
+
+        <ul class="tasks" id="task-list" aria-label="Task list"></ul>
+        <p class="empty" id="tasks-empty" hidden>
+          No tasks yet. Create the first one with the form above.
+        </p>
+        <p class="empty empty--error" id="tasks-error" role="alert" hidden></p>
+      </section>
+
+      <!-- ── MONITOR panel: HTTP log (dark scope) ───────────────────────────── -->
+      <section class="panel panel--monitor" aria-labelledby="monitor-title">
+        <div class="panel__head">
+          <span class="eyebrow eyebrow--onDark">Monitor</span>
+          <h2 class="panel__title panel__title--onDark" id="monitor-title">HTTP traffic</h2>
+          <button class="btn btn--ghost btn--sm" type="button" id="log-clear">Clear</button>
+        </div>
+
+        <ul class="wires" id="log-list" aria-label="HTTP request log"></ul>
+        <p class="empty empty--onDark" id="log-empty">
+          No traffic yet. Every request to the backend will appear here.
+        </p>
+      </section>
+
+      <!-- ── BENCHMARK card (full width) ────────────────────────────────────── -->
+      <section class="bench-card" aria-labelledby="bench-title">
+        <div class="bench-card__head">
+          <span class="eyebrow">Benchmark</span>
+          <h2 class="panel__title" id="bench-title">Concurrency 3.14</h2>
+          <p class="bench-card__hint">
+            The same CPU-bound function in three modes — sequential · threads · interpreters.
+          </p>
+        </div>
+
+        <form class="bench-card__controls" id="bench-form" aria-label="Benchmark parameters">
+          <label class="field field--tiny">
+            <span class="field__label">workers</span>
+            <input class="input" name="workers" type="number" min="1" max="8" value="4" />
+          </label>
+          <label class="field field--tiny">
+            <span class="field__label">n</span>
+            <input class="input" name="n" type="number" min="10000" max="5000000" step="10000" value="200000" />
+          </label>
+          <button class="btn btn--primary" type="submit" id="bench-run">Run benchmark</button>
+        </form>
+
+        <div class="bench-card__results">
+          <p class="empty" id="bench-empty">
+            No data yet. Run the benchmark to compare the three modes and see the GIL state.
+          </p>
+          <ul class="bars" id="bench-bars" hidden>
+            <li class="bar">
+              <span class="bar__label">sequential</span>
+              <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
+              <span class="bar__value">— ms</span>
+            </li>
+            <li class="bar">
+              <span class="bar__label">threads</span>
+              <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
+              <span class="bar__value">— ms</span>
+            </li>
+            <li class="bar bar--accent">
+              <span class="bar__label">interpreters</span>
+              <span class="bar__track"><span class="bar__fill" style="--pct: 0%"></span></span>
+              <span class="bar__value">— ms</span>
+            </li>
+          </ul>
+          <p class="bench-card__meta" id="bench-meta" hidden></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bench-foot">
+      <span>Educational POC · backend 100% stdlib Python 3.14 · frontend 100% Node 24 builtins</span>
+    </footer>
+
+    <!-- ── Canonical <template>s: the JS clones and fills them with textContent ─── -->
+    <template id="task-row">
+      <li class="task">
+        <div class="task__body">
+          <p class="task__title"></p>
+          <p class="task__desc"></p>
+        </div>
+        <div class="task__controls">
+          <label class="ctl">
+            <span class="ctl__label">status</span>
+            <select class="select select--sm" data-field="status">
+              <option value="pending">pending</option>
+              <option value="in_progress">in progress</option>
+              <option value="done">done</option>
+            </select>
+          </label>
+          <label class="ctl">
+            <span class="ctl__label">priority</span>
+            <select class="select select--sm" data-field="priority">
+              <option value="low">low</option>
+              <option value="medium">medium</option>
+              <option value="high">high</option>
+            </select>
+          </label>
+          <button class="icon-btn icon-btn--danger" type="button" aria-label="Delete task">✕</button>
+        </div>
+      </li>
+    </template>
+
+    <template id="log-entry">
+      <li class="wire">
+        <details class="wire__row">
+          <summary class="wire__line">
+            <span class="wire__led" aria-hidden="true"></span>
+            <span class="wire__method"></span>
+            <span class="wire__path"></span>
+            <span class="wire__status"></span>
+            <span class="wire__ms"></span>
+          </summary>
+          <div class="wire__detail">
+            <div class="wire__pane">
+              <span class="wire__pane-label">request</span>
+              <pre class="wire__pre"></pre>
+            </div>
+            <div class="wire__pane">
+              <span class="wire__pane-label">response</span>
+              <pre class="wire__pre"></pre>
+            </div>
+          </div>
+        </details>
+      </li>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+# --- Python (backend, stdlib-only) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- sqlite (tasks.db and its WAL/journal side files) ---
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# --- Node (frontend, builtins-only — node_modules should never exist) ---
+node_modules/
+*.log
+
+# --- Environment / secrets (in case compose grows variables someday) ---
+.env
+.env.*
+
+# --- Local dev tooling (not part of the project) ---
+.serena/
+
+# --- Editors / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,28 @@
+# Free-threaded variant (PEP 779): the SAME app running under CPython 3.14t (no GIL).
+# The app code doesn't change a single line — this image validates the
+# "free-threading-ready" design (ThreadingHTTPServer + one thread per request).
+#
+# Technical decision: the 3.14t interpreter is installed with `uv` (a runtime manager,
+# not an app dependency — the equivalent of installing python3). Its path is resolved at
+# build time and symlinked to /usr/local/bin/python3.14t, so the CMD invokes the
+# GIL-less binary directly (no uv or venv at runtime).
+FROM python:3.14-slim
+
+# uv from its official distroless image (no pip).
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Deterministic install path (slim images don't set HOME reliably for root), plus a
+# symlink to the free-threaded binary resolved by uv.
+ENV UV_PYTHON_INSTALL_DIR=/opt/py
+RUN uv python install 3.14t \
+    && ln -sf "$(uv python find 3.14t)" /usr/local/bin/python3.14t
+
+WORKDIR /app
+COPY app/ ./app/
+RUN mkdir -p /data
+
+EXPOSE 8000
+
+# KEY: invokes python3.14t (not the base image's GIL python) ⇒ health reports
+# "gil_enabled": false and threads parallelize for real.
+CMD ["python3.14t", "-m", "app", "--host", "0.0.0.0", "--port", "8000", "--db", "/data/tasks.db"]

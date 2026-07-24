@@ -1,0 +1,7 @@
+# Free-threaded override (PEP 779): the API runs under CPython 3.14t, no GIL.
+# Usage: docker compose -f compose.yaml -f compose.ft.yaml up --build
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ft
