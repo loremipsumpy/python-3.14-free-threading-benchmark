@@ -1,4 +1,4 @@
-"""Tests for the t-string helper (PEP 750) → parameterized (sql, params)."""
+"""Tests for the t-string helper (PEP 750, https://peps.python.org/pep-0750/) → parameterized (sql, params)."""
 
 import sqlite3
 import unittest

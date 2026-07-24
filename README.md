@@ -1,8 +1,8 @@
 # Python 3.14 free-threading benchmark — GIL vs no-GIL vs subinterpreters
 
-A **live, reproducible** benchmark of Python 3.14's new concurrency: the same CPU-bound function running sequentially, on `ThreadPoolExecutor`, and on `InterpreterPoolExecutor` (PEP 734) — under both the standard build (GIL) and the **free-threaded 3.14t** build (PEP 779, no GIL) — with a UI that renders the results as bars and shows the real HTTP traffic.
+A **live, reproducible** benchmark of Python 3.14's new concurrency: the same CPU-bound function running sequentially, on `ThreadPoolExecutor`, and on `InterpreterPoolExecutor` ([PEP 734](https://peps.python.org/pep-0734/)) — under both the standard build (GIL) and the **free-threaded 3.14t** build ([PEP 779](https://peps.python.org/pep-0779/), no GIL) — with a UI that renders the results as bars and shows the real HTTP traffic.
 
-The vehicle is an educational POC: a complete CRUD API written **only with the Python 3.14 standard library** (zero `pip install`), showcasing the newest language features — t-strings (PEP 750), `uuid.uuid7()`, `concurrent.interpreters` (PEP 734), structural pattern matching, PEP 695 type syntax — plus a vanilla-JS test front served by a static server built **only with Node 24 builtins** (zero `npm install`).
+The vehicle is an educational POC: a complete CRUD API written **only with the Python 3.14 standard library** (zero `pip install`), showcasing the newest language features — t-strings ([PEP 750](https://peps.python.org/pep-0750/)), `uuid.uuid7()`, `concurrent.interpreters` ([PEP 734](https://peps.python.org/pep-0734/)), structural pattern matching, [PEP 695](https://peps.python.org/pep-0695/) type syntax — plus a vanilla-JS test front served by a static server built **only with Node 24 builtins** (zero `npm install`).
 
 **Typical results (4 workers, n=200000, 32 cores):**
 
@@ -56,9 +56,9 @@ cd frontend && node --test            # node:test (builtin)
 The server is a `ThreadingHTTPServer` and logs whether the GIL is active
 (`sys._is_gil_enabled()`) at startup. `GET /api/benchmark` demonstrates
 `InterpreterPoolExecutor`: on the standard build, threads ≈ sequential (GIL)
-while subinterpreters scale with cores (per-interpreter GIL, PEP 684).
+while subinterpreters scale with cores (per-interpreter GIL, [PEP 684](https://peps.python.org/pep-0684/)).
 
-To see threads scale natively, install the free-threaded build (PEP 779) and
+To see threads scale natively, install the free-threaded build ([PEP 779](https://peps.python.org/pep-0779/)) and
 run the backend with it:
 
 ```bash

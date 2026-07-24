@@ -1,4 +1,5 @@
-# Free-threaded variant (PEP 779): the SAME app running under CPython 3.14t (no GIL).
+# Free-threaded variant (PEP 779, https://peps.python.org/pep-0779/): the SAME app
+# running under CPython 3.14t (no GIL).
 # The app code doesn't change a single line — this image validates the
 # "free-threading-ready" design (ThreadingHTTPServer + one thread per request).
 #

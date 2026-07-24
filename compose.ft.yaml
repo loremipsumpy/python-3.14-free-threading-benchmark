@@ -1,4 +1,5 @@
-# Free-threaded override (PEP 779): the API runs under CPython 3.14t, no GIL.
+# Free-threaded override (PEP 779, https://peps.python.org/pep-0779/): the API runs
+# under CPython 3.14t, no GIL.
 # Usage: docker compose -f compose.yaml -f compose.ft.yaml up --build
 services:
   api:

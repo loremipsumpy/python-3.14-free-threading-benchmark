@@ -6,7 +6,8 @@ deterministic, so all three modes produce the same result — the `checksum` is
 
 On the standard build (GIL enabled): `threads ≈ sequential` (the GIL serializes the
 CPU-bound work) while `interpreters ≪ both` — each subinterpreter has its own GIL
-(PEP 684), so they run truly in parallel. Under `python3.14t` (free-threading) threads
+(PEP 684, https://peps.python.org/pep-0684/), so they run truly in parallel.
+Under `python3.14t` (free-threading) threads
 would also parallelize, without touching this code.
 """
 
